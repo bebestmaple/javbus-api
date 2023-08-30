@@ -5,11 +5,14 @@
 ## 目录 <!-- omit in toc -->
 
 - [用途](#用途)
-- [使用](#使用)
-  - [部署与启动](#部署与启动)
-    - [Docker 部署（推荐）](#docker-部署推荐)
-    - [Node.js 部署](#nodejs-部署)
-      - [使用 PM2 保持服务后台常驻](#使用-pm2-保持服务后台常驻)
+- [部署与启动](#部署与启动)
+  - [Docker 部署（推荐）](#docker-部署推荐)
+    - [启用 https 服务器](#启用-https-服务器)
+    - [使用代理](#使用代理)
+  - [Node.js 部署](#nodejs-部署)
+    - [启用 https 服务器](#启用-https-服务器-1)
+    - [使用代理](#使用代理-1)
+    - [使用 PM2 保持服务后台常驻](#使用-pm2-保持服务后台常驻)
   - [配合 web 服务器](#配合-web-服务器)
 - [API 文档](#api-文档)
   - [/api/v1/movies](#apiv1movies)
@@ -41,15 +44,13 @@
 - 可以用来开发 Telegram 机器人
 - 等等...
 
-## 使用
+## 部署与启动
 
 注意：本程序仅仅是 JavBus 的一个在线转换服务，因此不依赖数据库服务，每个请求会实时请求 JavBus 对应的网页，解析之后返回对应的 json 数据
 
-**所以需要保证部署本程序的机器有访问 JavBus 的能力，否则请求会失败**
+因此，如果 JavBus 网站无法访问，本程序也无法正常工作
 
-### 部署与启动
-
-#### Docker 部署（推荐）
+### Docker 部署（推荐）
 
 [Docker Hub 地址](https://hub.docker.com/r/ovnrain/javbus-api)
 
@@ -64,7 +65,35 @@ $ docker run -d \
 
 启动一个 Docker 容器，将其名称设置为 `javbus-api`，端口设置为 `8922`，并且自动重启
 
-#### Node.js 部署
+#### 启用 https 服务器
+
+```shell
+$ docker run -d \
+    --name=javbus-api \
+    --restart=unless-stopped \
+    -p 8922:3000 \
+    -v /path/to/your/cert:/certs \
+    -e SSL_CERT=/certs/ssl.crt \
+    -e SSL_KEY=/certs/ssl.key \
+    ovnrain/javbus-api
+```
+
+注意：`-v` 和 `-e SSL_CERT`、`-e SSL_KEY` 这三个参数必须同时使用，否则无法启用 https 服务器
+
+#### 使用代理
+
+```shell
+$ docker run -d \
+    --name=javbus-api \
+    --restart=unless-stopped \
+    -p 8922:3000 \
+    -e HTTP_PROXY=http://192.168.5.123:1082 \
+    ovnrain/javbus-api
+```
+
+`HTTP_PROXY` 可以设置为 `http`、`https`、`socks`、 `socks5` 等代理地址
+
+### Node.js 部署
 
 ```shell
 $ git clone https://github.com/ovnrain/javbus-api.git
@@ -76,7 +105,34 @@ $ echo "PORT=8922" > .env # 可选，默认端口为 `3000`
 $ npm start
 ```
 
-##### 使用 PM2 保持服务后台常驻
+#### 启用 https 服务器
+
+```shell
+$ SSL_CERT=/path/to/your/cert/ssl.crt SSL_KEY=/path/to/your/cert/ssl.key npm start
+```
+
+或者编辑 `.env` 文件，添加以下内容：
+
+```env
+SSL_CERT=/path/to/your/cert/ssl.crt
+SSL_KEY=/path/to/your/cert/ssl.key
+```
+
+#### 使用代理
+
+```shell
+$ HTTP_PROXY=http://192.168.5.123:1082 npm start
+```
+
+或者编辑 `.env` 文件，添加以下内容：
+
+```env
+HTTP_PROXY=http://192.168.5.123:1082
+```
+
+`HTTP_PROXY` 可以设置为 `http`、`https`、`socks`、 `socks5` 等代理地址
+
+#### 使用 PM2 保持服务后台常驻
 
 ```shell
 $ npm install -g pm2
@@ -89,7 +145,7 @@ _关于 PM2 的详细使用方法，请参考 [PM2 官方文档](https://pm2.key
 
 ### 配合 web 服务器
 
-以上两种方式都可以配合 nginx 等一起使用，以实现 https 访问等，例如 nginx 配置如下：
+以上两种方式都可以配合 `NGINX`、`Caddy` 等一起使用，例如 NGINX 配置如下：
 
 ```nginx
 location /api {
