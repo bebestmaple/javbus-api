@@ -1,12 +1,18 @@
 import { Router } from 'express';
 import createError from 'http-errors';
-import { getMovieDetail, getMoviesByKeywordAndPage, getMoviesByPage } from '../javbusParser.js';
-import type { FilterType, MagnetType, MovieType } from '../types.js';
-import { moviesPageValidator, searchMoviesPageValidator, validate } from '../validators.js';
+import { moviesPageValidator, searchMoviesPageValidator, typeValidator } from './validators.js';
+import type { FilterType, MagnetType, MovieType } from './types.js';
+import {
+  getMovieDetail,
+  getMoviesByKeywordAndPage,
+  getMoviesByPage,
+  getStarInfo,
+} from './javbusParser.js';
+import { validate } from '../../utils.js';
 
-const router = Router();
+const movieRouter = Router();
 
-router.get('/', validate(moviesPageValidator), async (req, res, next) => {
+movieRouter.get('/', validate(moviesPageValidator), async (req, res, next) => {
   const query = req.query;
 
   const page = query['page'] as string;
@@ -24,7 +30,7 @@ router.get('/', validate(moviesPageValidator), async (req, res, next) => {
   }
 });
 
-router.get('/search', validate(searchMoviesPageValidator), async (req, res, next) => {
+movieRouter.get('/search', validate(searchMoviesPageValidator), async (req, res, next) => {
   const query = req.query;
 
   const page = query['page'] as string;
@@ -48,7 +54,7 @@ router.get('/search', validate(searchMoviesPageValidator), async (req, res, next
   }
 });
 
-router.get('/:id', async (req, res, next) => {
+movieRouter.get('/:id', async (req, res, next) => {
   const movieId = req.params.id;
 
   try {
@@ -60,5 +66,26 @@ router.get('/:id', async (req, res, next) => {
     next(e instanceof Error && e.message.includes('404') ? new createError.NotFound() : e);
   }
 });
+
+const starRouter = Router();
+
+starRouter.get('/:id', validate([typeValidator]), async (req, res, next) => {
+  const starId = req.params['id'] as string;
+  const type = req.query['type'] as MovieType | undefined;
+
+  try {
+    const starInfo = await getStarInfo(starId, type);
+
+    res.json(starInfo);
+  } catch (e) {
+    // 格式化一下错误
+    next(e instanceof Error && e.message.includes('404') ? new createError.NotFound() : e);
+  }
+});
+
+const router = Router();
+
+router.use('/movies', movieRouter);
+router.use('/stars', starRouter);
 
 export default router;
