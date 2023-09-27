@@ -1,21 +1,10 @@
 import type { NextFunction, Request, Response } from 'express';
-import { type ValidationChain, validationResult } from 'express-validator';
-
-export function normalizePort(val: string) {
-  const port = parseInt(val, 10);
-
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
-
-  if (port >= 0) {
-    // port number
-    return port;
-  }
-
-  return false;
-}
+import {
+  Result,
+  validationResult,
+  type ValidationChain,
+  type ValidationError,
+} from 'express-validator';
 
 export class QueryValidationError extends Error {
   messages: string[];
@@ -30,27 +19,9 @@ export class QueryValidationError extends Error {
   }
 }
 
-export const validate = (validations: ValidationChain[]) => {
-  return async (req: Request, _: Response, next: NextFunction) => {
-    await Promise.all(validations.map((validation) => validation.run(req)));
-
-    const errors = validationResult(req);
-    if (errors.isEmpty()) {
-      return next();
-    }
-
-    next(
-      new QueryValidationError(
-        'query is invalid',
-        errors.array().map((error) => error.msg),
-      ),
-    );
-  };
-};
-
-export const validate2 = <Req extends Request = Request, Res extends Response = Response>(
+export const commonValidate = <Req extends Request = Request, Res extends Response = Response>(
   validations: ValidationChain[],
-  callback: (res: Res, next: NextFunction) => void,
+  callback: (errors: Result<ValidationError>, req: Req, res: Res, next: NextFunction) => void,
 ) => {
   return async (req: Req, res: Res, next: NextFunction) => {
     await Promise.all(validations.map((validation) => validation.run(req)));
@@ -60,6 +31,19 @@ export const validate2 = <Req extends Request = Request, Res extends Response = 
       return next();
     }
 
-    callback(res, next);
+    callback(errors, req, res, next);
   };
+};
+
+export const validate = <Req extends Request = Request, Res extends Response = Response>(
+  validations: ValidationChain[],
+) => {
+  return commonValidate<Req, Res>(validations, (errors, req, res, next) => {
+    next(
+      new QueryValidationError(
+        'query is invalid',
+        errors.array().map((error) => error.msg),
+      ),
+    );
+  });
 };

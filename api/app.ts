@@ -5,7 +5,8 @@ import session from 'express-session';
 import memorystore from 'memorystore';
 import { body } from 'express-validator';
 import v1Router from './router/v1/router.js';
-import { QueryValidationError, validate2 } from './utils.js';
+import { QueryValidationError, commonValidate } from './utils.js';
+import ENV from './env.js';
 
 // 扩展 express-session 的 SessionData
 declare module 'express-session' {
@@ -40,7 +41,7 @@ app.use(express.json());
 // 用于解析 application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
 
-const { JAVBUS_AUTH_TOKEN, ADMIN_USERNAME, ADMIN_PASSWORD, JAVBUS_SESSION_SECRET } = process.env;
+const { JAVBUS_AUTH_TOKEN, ADMIN_USERNAME, ADMIN_PASSWORD, JAVBUS_SESSION_SECRET } = ENV;
 const useCredentials = Boolean(ADMIN_USERNAME && ADMIN_PASSWORD);
 const loginValidators = [
   { field: 'username', expect: ADMIN_USERNAME },
@@ -49,12 +50,7 @@ const loginValidators = [
   body(field)
     .notEmpty()
     .trim()
-    .custom((value: string) => {
-      if (typeof expect === 'undefined' || !expect.length) {
-        return false;
-      }
-      return value === expect;
-    }),
+    .custom((value: string) => (expect ? value === expect : false)),
 );
 const MemoryStore = memorystore(session);
 
@@ -82,7 +78,7 @@ app.get('/api/user', (req, res: GetUserResponse) => {
 
 app.post(
   '/api/login',
-  validate2<LoginRequest, UserActionResponse>(loginValidators, (res) => {
+  commonValidate<LoginRequest, UserActionResponse>(loginValidators, (errors, req, res) => {
     res.status(401).json({ success: false, message: 'Invalid username or password' });
   }),
   (req, res) => {

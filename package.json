@@ -1,6 +1,6 @@
 {
   "name": "javbus-api",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "JavBus API",
   "main": "index.js",
   "homepage": "https://github.com/ovnrain/javbus-api#readme",
@@ -9,8 +9,8 @@
     "dev": "tsx watch --clear-screen=false -r dotenv/config api/server.ts",
     "build": "npm run lint && tsc",
     "vercel-build": "tsc",
-    "format": "prettier --write 'api/**/*.ts'",
-    "lint": "eslint --config .eslintrc.commit.json api/**/*.ts",
+    "format": "prettier --write \"api/**/*.ts\"",
+    "lint": "eslint --config .eslintrc.commit.json \"api/**/*.ts\"",
     "prepare": "husky install"
   },
   "keywords": [
@@ -27,25 +27,22 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@tsconfig/esm": "^1.0.4",
-    "@tsconfig/node18": "^18.2.1",
-    "@tsconfig/strictest": "^2.0.1",
-    "@types/bytes": "^3.1.1",
+    "@types/bytes": "^3.1.2",
     "@types/express": "^4.17.17",
     "@types/express-session": "^1.17.7",
-    "@types/http-errors": "^2.0.1",
-    "@types/node": "^20.5.7",
+    "@types/http-errors": "^2.0.2",
+    "@types/node": "^20.6.2",
     "@types/probe-image-size": "^7.2.0",
-    "@types/qs": "^6.9.7",
-    "@typescript-eslint/eslint-plugin": "^6.5.0",
-    "@typescript-eslint/parser": "^6.5.0",
-    "eslint": "^8.48.0",
+    "@types/qs": "^6.9.8",
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "@typescript-eslint/parser": "^6.7.0",
+    "eslint": "^8.49.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
     "husky": "^8.0.3",
     "lint-staged": "^14.0.1",
-    "prettier": "^3.0.2",
-    "tsx": "^3.12.7",
+    "prettier": "^3.0.3",
+    "tsx": "^3.12.10",
     "typescript": "^5.2.2"
   },
   "dependencies": {
@@ -56,12 +53,21 @@
     "express-validator": "^7.0.1",
     "got": "^13.0.0",
     "http-errors": "^2.0.0",
-    "https-proxy-agent": "^7.0.1",
+    "https-proxy-agent": "^7.0.2",
     "memorystore": "^1.6.7",
-    "node-html-parser": "^6.1.6",
+    "node-html-parser": "^6.1.10",
     "probe-image-size": "^7.2.3",
     "qs": "^6.11.2",
-    "socks-proxy-agent": "^8.0.1"
+    "socks-proxy-agent": "^8.0.2",
+    "znv": "^0.4.0"
   },
-  "type": "module"
+  "type": "module",
+  "lint-staged": {
+    "*.ts": [
+      "eslint --config .eslintrc.commit.json"
+    ],
+    "*.html": [
+      "prettier --write"
+    ]
+  }
 }
