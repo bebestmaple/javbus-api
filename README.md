@@ -7,13 +7,13 @@
 - [用途](#用途)
 - [部署与启动](#部署与启动)
   - [Docker 部署（推荐）](#docker-部署推荐)
+    - [使用 Docker Compose 配合 NGINX 部署](#使用-docker-compose-配合-nginx-部署)
     - [启用 https 服务器](#启用-https-服务器)
     - [使用代理](#使用代理)
   - [Node.js 部署](#nodejs-部署)
     - [启用 https 服务器](#启用-https-服务器-1)
     - [使用代理](#使用代理-1)
     - [使用 PM2 保持服务后台常驻](#使用-pm2-保持服务后台常驻)
-  - [配合 web 服务器](#配合-web-服务器)
   - [Vercel 部署](#vercel-部署)
 - [权限校验](#权限校验)
   - [1. 使用用户名密码](#1-使用用户名密码)
@@ -52,7 +52,9 @@
 
 注意：本程序仅仅是 JavBus 的一个在线转换服务，因此不依赖数据库服务，每个请求会实时请求 JavBus 对应的网页，解析之后返回对应的 json 数据。因此，如果 JavBus 网站无法访问，本程序也无法正常工作
 
-**注意：目前使用美国 IP 代理或者部署在美国地区 VPS 上，JavBus 会跳转到登录页面，导致本程序无法获取数据，请使用其他地区的 IP 代理或者 VPS**
+> **Note**
+>
+> **目前使用美国 IP 代理或者部署在美国地区 VPS 上，JavBus 会跳转到登录页面，导致本程序无法获取数据，请使用其他地区的 IP 代理或者 VPS**
 
 ### Docker 部署（推荐）
 
@@ -68,6 +70,78 @@ $ docker run -d \
 ```
 
 启动一个 Docker 容器，将其名称设置为 `javbus-api`，端口设置为 `8922`，并且自动重启
+
+#### 使用 Docker Compose 配合 NGINX 部署
+
+_以下配置仅为示例，具体配置请根据自己的实际情况进行修改_
+
+docker-compose.yml
+
+```yaml
+version: '3.8'
+
+services:
+  api:
+    image: ovnrain/javbus-api
+    restart: unless-stopped
+    # 端口可选，不配置端口时，NGINX 依然可以通过容器内部网络访问 API
+    # ports:
+    #   - '3000:3000'
+
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - '8922:80'
+    depends_on:
+      - api
+    volumes:
+      - ./html:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./logs:/var/log/nginx
+    restart: unless-stopped
+```
+
+nginx.conf
+
+```nginx
+# 其他配置省略...
+
+http {
+  # 其他配置省略...
+
+  server {
+    listen 80;
+    server_name example.com;
+
+    location /api {
+      proxy_pass http://api:3000;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header Host $host;
+
+      proxy_hide_header Cache-Control;
+
+      proxy_cache_bypass $http_upgrade;
+      proxy_http_version 1.1;
+      proxy_redirect off;
+
+      add_header Cache-Control no-cache;
+    }
+
+    location / {
+      root /usr/share/nginx/html;
+      index index.html;
+    }
+  }
+}
+```
+
+启动容器
+
+```shell
+$ docker-compose up -d
+```
 
 #### 启用 https 服务器
 
@@ -147,20 +221,6 @@ _关于 PM2 的详细使用方法，请参考 [PM2 官方文档](https://pm2.key
 
 服务启动后，在浏览器中访问 [http://localhost:8922](http://localhost:8922) 即可获取结果
 
-### 配合 web 服务器
-
-以上两种方式都可以配合 `NGINX`、`Caddy` 等一起使用，例如 NGINX 配置如下：
-
-```nginx
-location /api {
-  proxy_pass http://localhost:8922;
-  proxy_http_version 1.1;
-  proxy_set_header Host $host;
-
-  add_header cache-control "no-cache";
-}
-```
-
 ### Vercel 部署
 
 使用 Vercel 部署的优势在于：
@@ -175,7 +235,9 @@ location /api {
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fovnrain%2Fjavbus-api&project-name=javbus-api&repository-name=javbus-api-from-ovnrain)
 
-**注意：部署在美国地区的 Vercel 上，JavBus 会跳转到登录页面，导致本程序无法获取数据，请使用其他地区的 Vercel。设置方法：在 Vercel 项目的 `Settings` -> `Functions` 中选择除美国以外的地区，如日本、香港等**
+> **Note**
+>
+> **部署在美国地区的 Vercel 上，JavBus 会跳转到登录页面，导致本程序无法获取数据，请使用其他地区的 Vercel。设置方法：在 Vercel 项目的 `Settings` -> `Functions` 中选择除美国以外的地区，如日本、香港等**
 
 ## 权限校验
 
@@ -231,7 +293,9 @@ j-auth-token: your_token
 
 关于 Docker、Node.js 的环境变量设置方式，请参考上面的部署方法。Vercel 设置环境变量可以在项目的 `Settings` -> `Environment Variables` 中设置
 
-**注意：只设置 `JAVBUS_AUTH_TOKEN` 环境变量是不安全的，用户依然可以通过不加 `j-auth-token` 请求头，或者在浏览器中直接访问 API**。因此，应该同时设置 `ADMIN_USERNAME` 和 `ADMIN_PASSWORD` 环境变量，以达到双重校验的目的
+> **Note**
+>
+> **只设置 `JAVBUS_AUTH_TOKEN` 环境变量是不安全的，用户依然可以通过不加 `j-auth-token` 请求头，或者在浏览器中直接访问 API。因此，应该同时设置 `ADMIN_USERNAME` 和 `ADMIN_PASSWORD` 环境变量，以达到双重校验的目的**
 
 ## API 文档
 
