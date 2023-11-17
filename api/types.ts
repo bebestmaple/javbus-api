@@ -4,6 +4,10 @@ export type MagnetType = 'all' | 'exist';
 
 export type FilterType = 'star' | 'genre' | 'director' | 'studio' | 'label' | 'series';
 
+export type SortBy = 'date' | 'size';
+
+export type SortOrder = 'asc' | 'desc';
+
 export interface Property {
   id: string;
   name: string;
@@ -52,9 +56,10 @@ export interface MovieDetail {
   series: Property | null;
   genres: Property[];
   stars: Property[];
-  magnets: Magnet[];
   imageSize: ImageSize | null;
   samples: Sample[];
+  gid: string | null;
+  uc: string | null;
 }
 
 export interface Pagination {

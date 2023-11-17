@@ -19,25 +19,30 @@
   - [1. 使用用户名密码](#1-使用用户名密码)
   - [2. 使用 Token](#2-使用-token)
 - [API 文档](#api-文档)
-  - [/api/v1/movies](#apiv1movies)
+  - [/api/movies](#apimovies)
     - [method](#method)
     - [参数](#参数)
     - [请求举例](#请求举例)
     - [返回举例](#返回举例)
-  - [/api/v1/movies/search](#apiv1moviessearch)
+  - [/api/movies/search](#apimoviessearch)
     - [method](#method-1)
     - [参数](#参数-1)
     - [请求举例](#请求举例-1)
     - [返回举例](#返回举例-1)
-  - [/api/v1/movies/{id}](#apiv1moviesid)
+  - [/api/movies/{movieId}](#apimoviesmovieid)
     - [method](#method-2)
     - [请求举例](#请求举例-2)
     - [返回举例](#返回举例-2)
-  - [/api/v1/stars/{id}](#apiv1starsid)
+  - [/api/magnets/{movieId}](#apimagnetsmovieid)
     - [method](#method-3)
     - [参数](#参数-2)
     - [请求举例](#请求举例-3)
     - [返回举例](#返回举例-3)
+  - [/api/stars/{starId}](#apistarsstarid)
+    - [method](#method-4)
+    - [参数](#参数-3)
+    - [请求举例](#请求举例-4)
+    - [返回举例](#返回举例-4)
 
 ## 用途
 
@@ -75,7 +80,7 @@ $ docker run -d \
 
 _以下配置仅为示例，具体配置请根据自己的实际情况进行修改_
 
-docker-compose.yml
+docker-compose.yml:
 
 ```yaml
 version: '3.8'
@@ -101,7 +106,7 @@ services:
     restart: unless-stopped
 ```
 
-nginx.conf
+nginx.conf:
 
 ```nginx
 # 其他配置省略...
@@ -137,7 +142,7 @@ http {
 }
 ```
 
-启动容器
+启动容器:
 
 ```shell
 $ docker-compose up -d
@@ -241,7 +246,9 @@ _关于 PM2 的详细使用方法，请参考 [PM2 官方文档](https://pm2.key
 
 ## 权限校验
 
-本项目默认不开启权限校验，即任何人都可以访问。如果项目部署在公网上，建议开启权限校验，以防止被恶意访问
+> **Note**
+>
+> **本项目默认不开启权限校验，即任何人都可以访问。如果项目部署在公网上，建议开启权限校验，以防止被恶意访问**
 
 权限校验目前有两种方式：
 
@@ -275,19 +282,19 @@ JAVBUS_AUTH_TOKEN=your_token
 使用 `curl`
 
 ```shell
-$ curl -H "j-auth-token: your_token" http://localhost:8922/api/v1/stars/okq
+$ curl -H "j-auth-token: your_token" http://localhost:8922/api/stars/okq
 ```
 
 使用 `Wget`
 
 ```shell
-$ wget --header="j-auth-token: your_token" http://localhost:8922/api/v1/stars/okq
+$ wget --header="j-auth-token: your_token" http://localhost:8922/api/stars/okq
 ```
 
 使用 [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client)
 
 ```http
-GET http://localhost:8922/api/v1/stars/okq HTTP/1.1
+GET http://localhost:8922/api/stars/okq HTTP/1.1
 j-auth-token: your_token
 ```
 
@@ -299,7 +306,7 @@ j-auth-token: your_token
 
 ## API 文档
 
-### /api/v1/movies
+### /api/movies
 
 获取影片列表
 
@@ -311,27 +318,27 @@ GET
 
 | 参数        | 是否必须 | 可选值                                                                       | 默认值   | 说明                                                                                                                                                              |
 | ----------- | -------- | ---------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| page        | 是       |                                                                              |          | 页码                                                                                                                                                              |
-| magnet      | 是       | `exist`<br />`all`                                                           |          | `exist`: 只返回有磁力链接的影片<br />`all`: 返回全部影片                                                                                                          |
+| page        | 否       |                                                                              | `1`      | 页码                                                                                                                                                              |
+| magnet      | 否       | `exist`<br />`all`                                                           | `exist`  | `exist`: 只返回有磁力链接的影片<br />`all`: 返回全部影片                                                                                                          |
 | filterType  | 否       | `star`<br />`genre`<br />`director`<br />`studio`<br />`label`<br />`series` |          | 筛选类型，必须与 `filterValue` 一起使用<br />`star`: 演员<br />`genre`: 类别<br />`director`: 导演<br />`studio`: 制作商<br />`label`: 发行商<br />`series`: 系列 |
 | filterValue | 否       |                                                                              |          | 筛选值，必须与 `filterType` 一起使用                                                                                                                              |
 | type        | 否       | `normal`<br />`uncensored`                                                   | `normal` | `normal`: 有码影片<br />`uncensored`: 无码影片                                                                                                                    |
 
 #### 请求举例
 
-    /api/v1/movies?page=1&magnet=exist
+    /api/movies
 
 返回有磁力链接的第一页影片
 
-    /api/v1/movies?page=1&filterType=star&filterValue=rsv&magnet=all
+    /api/movies?filterType=star&filterValue=rsv&magnet=all
 
 返回演员 ID 为 `rsv` 的影片的第一页，包含有磁力链接和无磁力链接的影片
 
-    /api/v1/movies?page=2&filterType=genre&filterValue=4&magnet=exist
+    /api/movies?page=2&filterType=genre&filterValue=4
 
 返回类别 ID 为 `4` 的影片的第二页，只返回有磁力链接的影片
 
-    /api/v1/movies?page=1&magnet=exist&type=uncensored
+    /api/movies?type=uncensored
 
 返回无码影片的第一页，只返回有磁力链接的影片
 
@@ -371,7 +378,7 @@ GET
 
 </details>
 
-### /api/v1/movies/search
+### /api/movies/search
 
 搜索影片
 
@@ -384,17 +391,17 @@ GET
 | 参数    | 是否必须 | 可选值                     | 默认值   | 说明                                                     |
 | ------- | -------- | -------------------------- | -------- | -------------------------------------------------------- |
 | keyword | 是       |                            |          | 搜索关键字                                               |
-| page    | 是       |                            |          | 页码                                                     |
-| magnet  | 是       | `exist`<br />`all`         |          | `exist`: 只返回有磁力链接的影片<br />`all`: 返回全部影片 |
+| page    | 否       |                            | `1`      | 页码                                                     |
+| magnet  | 否       | `exist`<br />`all`         | `exist`  | `exist`: 只返回有磁力链接的影片<br />`all`: 返回全部影片 |
 | type    | 否       | `normal`<br />`uncensored` | `normal` | `normal`: 有码影片<br />`uncensored`: 无码影片           |
 
 #### 请求举例
 
-    /api/v1/movies/search?keyword=三上&page=1&magnet=exist
+    /api/movies/search?keyword=三上
 
 搜索关键词为 `三上` 的影片的第一页，只返回有磁力链接的影片
 
-    /api/v1/movies/search?keyword=三上&page=1&magnet=all
+    /api/movies/search?keyword=三上&magnet=all
 
 搜索关键词为 `三上` 的影片的第一页，包含有磁力链接和无磁力链接的影片
 
@@ -429,7 +436,7 @@ GET
 
 </details>
 
-### /api/v1/movies/{id}
+### /api/movies/{movieId}
 
 获取影片详情
 
@@ -439,7 +446,7 @@ GET
 
 #### 请求举例
 
-    /api/v1/movies/SSIS-406
+    /api/movies/SSIS-406
 
 返回番号为 `SSIS-406` 的影片详情
 
@@ -491,22 +498,6 @@ GET
       "name": "葵つかさ"
     }
   ],
-  // 磁力链接列表
-  "magnets": [
-    {
-      "link": "magnet:?xt=urn:btih:A6D7C90FAB7E4223C61425A2E4CDF9E503CEDAA2&dn=SSIS-406-C",
-      // 是否高清
-      "isHD": true,
-      "title": "SSIS-406-C",
-      "size": "5.46GB",
-      // bytes
-      "numberSize": 5862630359,
-      "shareDate": "2022-05-20",
-      // 是否包含字幕
-      "hasSubtitle": true
-    }
-    // ...
-  ],
   // 影片预览图
   "samples": [
     {
@@ -518,13 +509,72 @@ GET
       "thumbnail": "https://www.javbus.com/pics/sample/8xnc_1.jpg"
     }
     // ...
-  ]
+  ],
+  "gid": "50217160940",
+  "uc": "0"
 }
 ```
 
 </details>
 
-### /api/v1/stars/{id}
+### /api/magnets/{movieId}
+
+获取影片磁力链接
+
+#### method
+
+GET
+
+#### 参数
+
+| 参数      | 是否必须 | 可选值             | 默认值 | 说明                                            |
+| --------- | -------- | ------------------ | ------ | ----------------------------------------------- |
+| gid       | 是       |                    |        | 从影片详情获取到的 `gid`                        |
+| uc        | 是       |                    |        | 从影片详情获取到的 `uc`                         |
+| sortBy    | 否       | `date`<br />`size` | `size` | 按照日期或大小排序，必须与 `sortOrder` 一起使用 |
+| sortOrder | 否       | `asc`<br />`desc`  | `desc` | 升序或降序，必须与 `sortBy` 一起使用            |
+
+#### 请求举例
+
+    /api/magnets/SSNI-730?gid=42785257471&uc=0
+
+返回番号为 `SSNI-730` 的影片的磁力链接
+
+    /api/magnets/SSNI-730?gid=42785257471&uc=0&sortBy=size&sortOrder=asc
+
+返回番号为 `SSNI-730` 的影片的磁力链接，并按照大小升序排序
+
+    /api/magnets/SSNI-730?gid=42785257471&uc=0&sortBy=date&sortOrder=desc
+
+返回番号为 `SSNI-730` 的影片的磁力链接，并按照日期降序排序
+
+#### 返回举例
+
+<details>
+<summary>点击展开</summary>
+
+```jsonc
+[
+  {
+    "id": "17508BF5C17CBDF7C77E12DAAD1BDAB325116585",
+    "link": "magnet:?xt=urn:btih:17508BF5C17CBDF7C77E12DAAD1BDAB325116585&dn=SSNI-730-C",
+    // 是否高清
+    "isHD": true,
+    "title": "SSNI-730-C",
+    "size": "6.57GB",
+    // bytes
+    "numberSize": 7054483783,
+    "shareDate": "2021-03-14",
+    // 是否包含字幕
+    "hasSubtitle": true
+  }
+  // ...
+]
+```
+
+</details>
+
+### /api/stars/{starId}
 
 获取演员详情
 
@@ -540,11 +590,11 @@ GET
 
 #### 请求举例
 
-    /api/v1/stars/2xi
+    /api/stars/2xi
 
 返回演员 `葵つかさ` 的详情
 
-    /api/v1/stars/2jd?type=uncensored
+    /api/stars/2jd?type=uncensored
 
 返回演员 `波多野結衣` 的详情
 
