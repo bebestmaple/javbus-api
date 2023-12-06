@@ -1,4 +1,4 @@
-FROM node:hydrogen-alpine AS base
+FROM node:iron-slim AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -25,9 +25,11 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 
 # -------------------
 
-FROM node:hydrogen-alpine
+FROM node:iron-slim
 
-RUN apk add --no-cache tini
+RUN apt-get update && \
+  apt-get install -y --no-install-recommends tini && \
+  rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV production
 USER node
@@ -41,4 +43,4 @@ COPY --chown=node:node --from=build /app/public /app/public
 
 EXPOSE 3000
 
-CMD [ "/sbin/tini", "--", "node", "dist/server.js" ]
+CMD [ "/usr/bin/tini", "--", "node", "dist/server.js" ]
