@@ -224,8 +224,6 @@ $ pm2 start npm --name javbus-api -- start
 
 _关于 PM2 的详细使用方法，请参考 [PM2 官方文档](https://pm2.keymetrics.io/docs/usage/quick-start/)_
 
-服务启动后，在浏览器中访问 [http://localhost:8922](http://localhost:8922) 即可获取结果
-
 ### Vercel 部署
 
 使用 Vercel 部署的优势在于：
@@ -507,6 +505,15 @@ GET
       "src": "https://pics.dmm.co.jp/digital/video/ssis00406/ssis00406jp-1.jpg",
       // 缩略图
       "thumbnail": "https://www.javbus.com/pics/sample/8xnc_1.jpg"
+    }
+    // ...
+  ],
+  // 同类影片
+  "similarMovies": [
+    {
+      "id": "SNIS-477",
+      "title": "クレーム処理会社の女社長 土下座とカラダで解決します 夢乃あいか",
+      "img": "https://www.javbus.com/pics/thumb/4wml.jpg"
     }
     // ...
   ],
