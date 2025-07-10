@@ -10,7 +10,7 @@
     "build": "tsc",
     "vercel-build": "tsc",
     "format": "prettier --write \"api/**/*.ts\"",
-    "lint": "eslint --config .eslintrc.commit.json \"api/**/*.ts\"",
+    "lint": "eslint . --config eslint.commit.config.mjs",
     "prepare": "husky"
   },
   "keywords": [
@@ -27,27 +27,28 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "@eslint/js": "^9.30.0",
     "@types/bytes": "^3.1.5",
-    "@types/express": "^5.0.2",
-    "@types/express-session": "^1.18.1",
-    "@types/http-errors": "^2.0.4",
-    "@types/node": "^22.15.29",
+    "@types/express": "^5.0.3",
+    "@types/express-session": "^1.18.2",
+    "@types/http-errors": "^2.0.5",
+    "@types/node": "^24.0.7",
     "@types/probe-image-size": "^7.2.5",
     "@types/qs": "^6.14.0",
-    "@typescript-eslint/eslint-plugin": "^8.33.0",
-    "@typescript-eslint/parser": "^8.33.0",
-    "eslint": "^8.57.0",
+    "eslint": "^9.30.0",
     "eslint-config-prettier": "^10.1.5",
-    "eslint-plugin-prettier": "^5.4.1",
+    "eslint-plugin-prettier": "^5.5.1",
+    "globals": "^16.2.0",
     "husky": "^9.1.7",
-    "lint-staged": "^16.1.0",
-    "prettier": "^3.5.3",
-    "tsx": "^4.19.4",
-    "typescript": "^5.8.3"
+    "lint-staged": "^16.1.2",
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.35.0"
   },
   "dependencies": {
     "bytes": "^3.1.2",
-    "dotenv": "^16.5.0",
+    "dotenv": "^17.0.0",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
     "express-validator": "^7.2.1",
@@ -60,12 +61,12 @@
     "qs": "^6.14.0",
     "socks-proxy-agent": "^8.0.5",
     "znv": "^0.5.0",
-    "zod": "^3.25.42"
+    "zod": "^3.25.67"
   },
   "type": "module",
   "lint-staged": {
     "*.ts": [
-      "eslint --config .eslintrc.commit.json"
+      "eslint --config eslint.commit.config.mjs"
     ],
     "*.html": [
       "prettier --write"
